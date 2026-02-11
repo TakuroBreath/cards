@@ -41,6 +41,7 @@ func main() {
 }
 
 func InitDB() (*gorm.DB, error) {
+	// docker run -d --name cards -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=cards -p 5432:5432 postgres:16-alpine
 	dsn := "host=localhost port=5432 user=postgres password=postgres dbname=cards sslmode=disable"
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
