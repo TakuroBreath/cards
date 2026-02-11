@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cards - Карточки для учёбы</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        header h1 { font-size: 1.4rem; font-weight: 600; }
+
+        #user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+        }
+
+        #user-info span { opacity: 0.8; }
+
+        #btn-logout {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        #btn-logout:hover { background: rgba(255,255,255,0.25); }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+
+        /* Auth screen */
+        #auth-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 60px);
+        }
+
+        .auth-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .auth-box h2 {
+            margin-bottom: 24px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4361ee;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        .btn-primary {
+            background: #4361ee;
+            color: #fff;
+            width: 100%;
+        }
+
+        .btn-primary:hover { background: #3a56d4; }
+
+        .error-msg {
+            color: #e63946;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            min-height: 20px;
+        }
+
+        /* Cards screen */
+        #app-screen { display: none; }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .top-bar h2 { font-size: 1.3rem; }
+
+        .btn-add {
+            background: #4361ee;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 8px;
+        }
+
+        .btn-add:hover { background: #3a56d4; }
+
+        /* Topic filter */
+        .topic-filter {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .topic-btn {
+            padding: 6px 14px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .topic-btn.active {
+            background: #4361ee;
+            color: #fff;
+            border-color: #4361ee;
+        }
+
+        .topic-btn:hover { border-color: #4361ee; }
+
+        /* Card grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .card-topic {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #4361ee;
+            margin-bottom: 10px;
+        }
+
+        .card-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 1rem;
+            line-height: 1.5;
+            padding: 8px;
+        }
+
+        .card-hint {
+            font-size: 0.75rem;
+            color: #999;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .card.flipped { background: #f0f7ff; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state p { font-size: 1.1rem; margin-bottom: 8px; }
+        .empty-state small { font-size: 0.85rem; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: #fff;
+            border-radius: 12px;
+            padding: 32px;
+            width: 90%;
+            max-width: 480px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .modal textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal textarea:focus {
+            outline: none;
+            border-color: #4361ee;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            background: #eee;
+            color: #333;
+        }
+
+        .btn-cancel:hover { background: #ddd; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Cards</h1>
+    <div id="user-info" style="display:none">
+        <span id="username-display"></span>
+        <button id="btn-logout" onclick="logout()">Выйти</button>
+    </div>
+</header>
+
+<div id="auth-screen">
+    <div class="auth-box">
+        <h2>Регистрация</h2>
+        <form id="auth-form" onsubmit="register(event)">
+            <div class="form-group">
+                <label for="username">Имя пользователя</label>
+                <input type="text" id="username" required autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" required autocomplete="new-password">
+            </div>
+            <div class="error-msg" id="auth-error"></div>
+            <button type="submit" class="btn btn-primary">Войти / Зарегистрироваться</button>
+        </form>
+    </div>
+</div>
+
+<div id="app-screen">
+    <div class="container">
+        <div class="top-bar">
+            <h2>Мои карточки</h2>
+            <button class="btn btn-add" onclick="openModal()">+ Новая</button>
+        </div>
+        <div class="topic-filter" id="topic-filter"></div>
+        <div class="cards-grid" id="cards-grid"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+        <h3>Новая карточка</h3>
+        <form id="card-form" onsubmit="createCard(event)">
+            <div class="form-group">
+                <label>Тема</label>
+                <input type="text" id="card-topic" required placeholder="Например: Математика">
+            </div>
+            <div class="form-group">
+                <label>Вопрос</label>
+                <textarea id="card-question" required placeholder="Введите вопрос..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Ответ</label>
+                <textarea id="card-answer" required placeholder="Введите ответ..."></textarea>
+            </div>
+            <div class="error-msg" id="card-error"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-cancel" onclick="closeModal()">Отмена</button>
+                <button type="submit" class="btn btn-primary" style="width:auto">Создать</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let currentUser = null;
+    let allCards = [];
+    let activeTopic = null;
+
+    // Auth
+    async function register(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const errorEl = document.getElementById('auth-error');
+        errorEl.textContent = '';
+
+        try {
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                if (res.status === 409) {
+                    errorEl.textContent = 'Пользователь уже существует. Используется существующий аккаунт.';
+                    // For simplicity, try to find user by making a card request won't work.
+                    // We'll store username and try fetching cards - if user exists, we just need their id.
+                    // Since there's no login endpoint, we do a workaround:
+                    errorEl.textContent = 'Имя занято. Попробуйте другое или используйте своё.';
+                    return;
+                }
+                errorEl.textContent = data.error || 'Ошибка';
+                return;
+            }
+
+            currentUser = { id: data.id, username: data.username };
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            showApp();
+        } catch (err) {
+            errorEl.textContent = 'Ошибка соединения с сервером';
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        localStorage.removeItem('user');
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('app-screen').style.display = 'none';
+        document.getElementById('user-info').style.display = 'none';
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    }
+
+    function showApp() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'block';
+        document.getElementById('user-info').style.display = 'flex';
+        document.getElementById('username-display').textContent = currentUser.username;
+        loadCards();
+    }
+
+    // Cards
+    async function loadCards() {
+        try {
+            const res = await fetch(`/api/cards/${currentUser.id}`);
+            const data = await res.json();
+            allCards = data || [];
+            renderTopics();
+            renderCards();
+        } catch (err) {
+            console.error('Failed to load cards:', err);
+        }
+    }
+
+    function renderTopics() {
+        const topics = [...new Set(allCards.map(c => c.topic))].sort();
+        const container = document.getElementById('topic-filter');
+
+        if (topics.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = `<button class="topic-btn ${!activeTopic ? 'active' : ''}" onclick="filterTopic(null)">Все</button>`;
+        topics.forEach(t => {
+            html += `<button class="topic-btn ${activeTopic === t ? 'active' : ''}" onclick="filterTopic('${t.replace(/'/g, "\\'")}')">${t}</button>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function filterTopic(topic) {
+        activeTopic = topic;
+        renderTopics();
+        renderCards();
+    }
+
+    function renderCards() {
+        const grid = document.getElementById('cards-grid');
+        const filtered = activeTopic ? allCards.filter(c => c.topic === activeTopic) : allCards;
+
+        if (filtered.length === 0) {
+            grid.innerHTML = `<div class="empty-state"><p>Карточек пока нет</p><small>Нажмите "+ Новая" чтобы создать первую карточку</small></div>`;
+            return;
+        }
+
+        grid.innerHTML = filtered.map(card => `
+            <div class="card" onclick="flipCard(this)" data-flipped="false">
+                <div class="card-topic">${escapeHtml(card.topic)}</div>
+                <div class="card-content">${escapeHtml(card.question)}</div>
+                <div class="card-hint">Нажмите, чтобы увидеть ответ</div>
+            </div>
+        `).join('');
+
+        // Store answer data
+        const cardEls = grid.querySelectorAll('.card');
+        filtered.forEach((card, i) => {
+            cardEls[i].dataset.question = card.question;
+            cardEls[i].dataset.answer = card.answer;
+        });
+    }
+
+    function flipCard(el) {
+        const flipped = el.dataset.flipped === 'true';
+        if (flipped) {
+            el.classList.remove('flipped');
+            el.querySelector('.card-content').textContent = el.dataset.question;
+            el.querySelector('.card-hint').textContent = 'Нажмите, чтобы увидеть ответ';
+            el.dataset.flipped = 'false';
+        } else {
+            el.classList.add('flipped');
+            el.querySelector('.card-content').textContent = el.dataset.answer;
+            el.querySelector('.card-hint').textContent = 'Нажмите, чтобы увидеть вопрос';
+            el.dataset.flipped = 'true';
+        }
+    }
+
+    // Modal
+    function openModal() {
+        document.getElementById('modal-overlay').classList.add('active');
+        document.getElementById('card-topic').focus();
+    }
+
+    function closeModal() {
+        document.getElementById('modal-overlay').classList.remove('active');
+        document.getElementById('card-form').reset();
+        document.getElementById('card-error').textContent = '';
+    }
+
+    async function createCard(e) {
+        e.preventDefault();
+        const errorEl = document.getElementById('card-error');
+        errorEl.textContent = '';
+
+        const topic = document.getElementById('card-topic').value.trim();
+        const question = document.getElementById('card-question').value.trim();
+        const answer = document.getElementById('card-answer').value.trim();
+
+        try {
+            const res = await fetch(`/api/cards/${currentUser.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topic, question, answer })
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                errorEl.textContent = data.error || 'Ошибка при создании';
+                return;
+            }
+
+            closeModal();
+            loadCards();
+        } catch (err) {
+            errorEl.textContent = 'Ошибка соединения с сервером';
+        }
+    }
+
+    // Utils
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Init - check saved session
+    (function init() {
+        const saved = localStorage.getItem('user');
+        if (saved) {
+            currentUser = JSON.parse(saved);
+            showApp();
+        }
+    })();
+
+    // Close modal on overlay click
+    document.getElementById('modal-overlay').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+</script>
+
+</body>
+</html>
